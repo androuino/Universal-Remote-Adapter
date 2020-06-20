@@ -2,4 +2,6 @@
     <string name="app_name">Universal Remote Adapter</string>
     <!-- TEXTVIEW -->
     <string name="connect_to_devices">Connect to BT devices</string>
+    <!-- EXCEPTIONS -->
+    <string name="illegal_argument_exception">Illegal argument exceptions in RvCurrencies</string>
 </resources>
