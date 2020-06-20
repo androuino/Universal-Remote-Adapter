@@ -15,9 +15,7 @@ import com.intellisrc.universalremoteadapter.databinding.FragmentMainBinding
 import com.intellisrc.universalremoteadapter.ui.base.BaseFragment
 import com.intellisrc.universalremoteadapter.utils.Preconditions
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.annotations.NonNull
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
 import kotlin.system.exitProcess

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Universal Remote Adapter</string>
+    <!-- TEXTVIEW -->
+    <string name="connect_to_devices">Connect to BT devices</string>
 </resources>
