@@ -60,6 +60,7 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
         if (ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION), 1)
         }
+
     }
 
     override fun onRequestPermissionsResult(
