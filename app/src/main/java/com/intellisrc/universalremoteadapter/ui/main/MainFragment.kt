@@ -15,6 +15,8 @@ import com.intellisrc.universalremoteadapter.databinding.FragmentMainBinding
 import com.intellisrc.universalremoteadapter.ui.base.BaseFragment
 import com.intellisrc.universalremoteadapter.utils.Preconditions
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.annotations.NonNull
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
@@ -25,6 +27,7 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
     private var viewModel: MainFragmentViewModel? = null
     private lateinit var viewBinding: FragmentMainBinding
     private var rxBluetooth: RxBluetooth? = null
+    private val compositeDisposable: CompositeDisposable = CompositeDisposable()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -51,9 +54,14 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
                 rxBluetooth?.enableBluetooth(requireActivity(), 2)
             } else {
                 // do operation here like connect or show the available Bluetooth devices
-                rxBluetooth?.observeDevices()?.observeOn(AndroidSchedulers.mainThread())?.subscribeOn(Schedulers.computation())?.subscribe {
-                    Timber.tag(TAG).d("${it.name} : ${it.address}")
-                }
+                compositeDisposable.add(
+                    rxBluetooth!!.observeDevices()
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.computation())
+                        .subscribe { bluetoothDevice ->
+                            Timber.tag(TAG).i("${bluetoothDevice?.name} : ${bluetoothDevice?.address}")
+                        })
+                rxBluetooth?.startDiscovery()
             }
         }
 
@@ -87,6 +95,12 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
                 }
             }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        compositeDisposable.dispose()
+        rxBluetooth?.cancelDiscovery()
     }
 
     override fun bindViewModel(viewModel: MainFragmentViewModel) {
