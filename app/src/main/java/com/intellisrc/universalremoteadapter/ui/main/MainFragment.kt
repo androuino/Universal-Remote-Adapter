@@ -26,6 +26,7 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
     private lateinit var viewBinding: FragmentMainBinding
     private var rxBluetooth: RxBluetooth? = null
     private val compositeDisposable: CompositeDisposable = CompositeDisposable()
+    private val btDevicesList = ArrayList<BluetoothDevice>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -57,7 +58,7 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.computation())
                         .subscribe { bluetoothDevice ->
-                            Timber.tag(TAG).i("${bluetoothDevice?.name} : ${bluetoothDevice?.address}")
+                            btDevicesList.add(bluetoothDevice)
                         })
                 rxBluetooth?.startDiscovery()
             }
@@ -66,6 +67,10 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
         if (ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION), 1)
         }
+    }
+
+    private fun initAdapter() {
+
     }
 
     override fun onRequestPermissionsResult(
