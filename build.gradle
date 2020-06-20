@@ -21,6 +21,7 @@ allprojects {
         jcenter()
         maven { url "https://jitpack.io" }
         maven { url "maven.google.com" }
+        maven { url "https://oss.jfrog.org/libs-snapshot" }
         maven { url "https://raw.githubusercontent.com/bit6/bit6-android-sdk/master/releases/" }
         maven {
             url "https://cardinalcommerce.bintray.com/android"
@@ -57,8 +58,8 @@ ext {
     // okHttp
     loggingInterceptorVersion = "3.8.1"
     // RxJava
-    rxAndroidVersion = "3.0.0"
-    rxJavaVersion = "3.0.0"
+    rxJava2Version = "2.1.1"
+    rxJava3Version = "3.0.0"
     // Navigation
     navigationVersion = "1.0.0"
     // timber
@@ -97,4 +98,7 @@ ext {
     mockitoKotlinVersion = "0.9.0"
     // android annotation
     androidAnnotationVersion = "4.6.0"
+    // rxBluetooth
+    rxAndroidBleVersion = "1.11.1"
+    rxBluetoothVersion = "2.1.1"
 }

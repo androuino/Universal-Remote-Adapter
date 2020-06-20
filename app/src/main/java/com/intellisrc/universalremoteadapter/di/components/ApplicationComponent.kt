@@ -22,6 +22,7 @@ import javax.inject.Singleton
     BackstackModule::class,
     SchedulerModule::class,
     RoomModule::class,
+    BluetoothModule::class,
     AndroidSupportInjectionModule::class
 ])
 interface ApplicationComponent {

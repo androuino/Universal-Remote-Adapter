@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId "com.intellisrc.universalremoteadapter"
-        minSdkVersion 16
+        minSdkVersion 18
         //targetSdkVersion 23
         versionCode 1
         versionName "1.0"
@@ -76,8 +76,10 @@ dependencies {
     debugImplementation "com.squareup.leakcanary:leakcanary-android:${leakCanaryVersion}"
     releaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${leakCanaryVersion}"
     // RxJava
-    implementation "io.reactivex.rxjava3:rxjava:${rxJavaVersion}"
-    implementation "io.reactivex.rxjava3:rxandroid:${rxAndroidVersion}"
+    implementation "io.reactivex.rxjava2:rxjava:${rxJava2Version}"
+    implementation "io.reactivex.rxjava2:rxandroid:${rxJava2Version}"
+    implementation "io.reactivex.rxjava3:rxjava:${rxJava3Version}"
+    implementation "io.reactivex.rxjava3:rxandroid:${rxJava3Version}"
     // Gson
     implementation "com.google.code.gson:gson:${gsonVersion}"
     // Websocket
@@ -132,5 +134,8 @@ dependencies {
     kaptTest "com.google.auto.value:auto-value:${autoValueVersion}"
     // android annotations
     kapt "org.androidannotations:androidannotations:$androidAnnotationVersion"
-    implementation "org.androidannotations:androidannotations-api:$androidAnnotationVersion"
+    implementation "org.androidannotations:androidannotations-api:${androidAnnotationVersion}"
+    // rxBleAndroid
+    implementation "com.polidea.rxandroidble2:rxandroidble:${rxAndroidBleVersion}"
+    implementation "com.github.ivbaranov:rxbluetooth2:${rxBluetoothVersion}"
 }

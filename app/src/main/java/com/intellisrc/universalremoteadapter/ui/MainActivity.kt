@@ -1,6 +1,7 @@
 package com.intellisrc.universalremoteadapter.ui
 
 import android.os.Bundle
+import androidx.core.app.ActivityCompat
 import butterknife.ButterKnife
 import com.intellisrc.universalremoteadapter.R
 import com.intellisrc.universalremoteadapter.di.Injector
