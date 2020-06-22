@@ -26,7 +26,6 @@ import kotlin.system.exitProcess
 class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
     private var viewModel: MainFragmentViewModel? = null
     private lateinit var viewBinding: FragmentMainBinding
-    private var rxBluetooth: RxBluetooth? = null
     private val compositeDisposable: CompositeDisposable = CompositeDisposable()
     private val btDevicesList = ArrayList<BluetoothDevice>()
     private var btDeviceAdapter: BluetoothDeviceAdapter? = null
@@ -48,19 +47,18 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
     @SuppressLint("CheckResult")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        rxBluetooth = RxBluetooth(requireContext())
         initAdapter()
 
-        if (!rxBluetooth?.isBluetoothAvailable!!) {
+        if (!viewModel?.rxBluetooth?.isBluetoothAvailable!!) {
             Timber.tag(TAG).i("Bluetooth is not available in this device. Exiting")
             exitProcess(0)
         } else {
-            if (!rxBluetooth?.isBluetoothEnabled!!) {
-                rxBluetooth?.enableBluetooth(requireActivity(), 2)
+            if (!viewModel?.rxBluetooth?.isBluetoothEnabled!!) {
+                viewModel?.rxBluetooth?.enableBluetooth(requireActivity(), 2)
             } else {
                 // do operation here like connect or show the available Bluetooth devices
                 compositeDisposable.add(
-                    rxBluetooth!!.observeDevices()
+                    viewModel?.rxBluetooth!!.observeDevices()
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.computation())
                         .subscribe { bluetoothDevice ->
@@ -69,7 +67,7 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
                                 btDevicesList.add(bluetoothDevice)
                             btDeviceAdapter?.updatesBluetoothDevicesList(btDevicesList, requireActivity())
                         })
-                rxBluetooth?.startDiscovery()
+                viewModel?.rxBluetooth?.startDiscovery()
             }
         }
 
@@ -80,7 +78,7 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
 
     private fun initAdapter() {
         val list = ArrayList<BluetoothDevice>(1)
-        btDeviceAdapter = BluetoothDeviceAdapter(list, viewModel, rxBluetooth)
+        btDeviceAdapter = BluetoothDeviceAdapter(list, viewModel, viewModel?.rxBluetooth)
         rvBluetoothDevices.adapter = btDeviceAdapter
         rvBluetoothDevices.layoutManager = CustomLinearLayout(requireActivity())
         btDeviceAdapter?.notifyDataSetChanged()
@@ -96,12 +94,12 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
             permissions.forEach {
                 if (android.Manifest.permission.ACCESS_COARSE_LOCATION == it) {
                     Timber.tag(TAG).i("Permission Granted")
-                    if (!rxBluetooth?.isBluetoothAvailable!!) {
+                    if (!viewModel?.rxBluetooth?.isBluetoothAvailable!!) {
                         Timber.tag(TAG).i("Bluetooth is not available in this device. Exiting")
                         exitProcess(0)
                     } else {
-                        if (!rxBluetooth?.isBluetoothEnabled!!) {
-                            rxBluetooth?.enableBluetooth(requireActivity(), 2)
+                        if (!viewModel?.rxBluetooth?.isBluetoothEnabled!!) {
+                            viewModel?.rxBluetooth?.enableBluetooth(requireActivity(), 2)
                         } else {
                             // do operation here like connect or show the available Bluetooth devices
                         }
@@ -116,7 +114,7 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
     override fun onDestroyView() {
         super.onDestroyView()
         compositeDisposable.dispose()
-        rxBluetooth?.cancelDiscovery()
+        viewModel?.rxBluetooth?.cancelDiscovery()
     }
 
     override fun bindViewModel(viewModel: MainFragmentViewModel) {

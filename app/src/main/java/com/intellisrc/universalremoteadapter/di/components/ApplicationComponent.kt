@@ -2,6 +2,7 @@ package com.intellisrc.universalremoteadapter.di.components
 
 import android.app.Application
 import android.content.Context
+import com.github.ivbaranov.rxbluetooth.RxBluetooth
 import com.intellisrc.universalremoteadapter.App
 import com.intellisrc.universalremoteadapter.Service
 import com.intellisrc.universalremoteadapter.di.ApplicationContext
@@ -10,6 +11,7 @@ import com.intellisrc.universalremoteadapter.ui.base.BaseActivity
 import com.intellisrc.universalremoteadapter.ui.base.BaseViewModel
 import com.intellisrc.universalremoteadapter.ui.main.MainFragmentViewModel
 import com.intellisrc.universalremoteadapter.utils.BackstackHolder
+import com.polidea.rxandroidble2.RxBleClient
 import com.zhuinden.simplestack.Backstack
 import dagger.Component
 import dagger.android.support.AndroidSupportInjectionModule
@@ -31,6 +33,8 @@ interface ApplicationComponent {
     val application: Application
     var backstack: Backstack
     var backstackHolder: BackstackHolder
+    var rxBluetooth: RxBluetooth
+    var rxBleClient: RxBleClient
 
     // application
     fun inject(app: App)
