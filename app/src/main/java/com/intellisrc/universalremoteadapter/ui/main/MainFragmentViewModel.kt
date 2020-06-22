@@ -16,6 +16,9 @@ class MainFragmentViewModel @Inject constructor(private val backstack: Backstack
          * Any coroutine launched in this scope is automatically canceled if the ViewModel is cleared
          */
         viewModelScope.launch {
+            if (!rxBluetooth.isBluetoothEnabled) {
+
+            }
         }
     }
 

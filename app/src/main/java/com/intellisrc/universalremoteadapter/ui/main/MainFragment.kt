@@ -62,7 +62,6 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.computation())
                         .subscribe { bluetoothDevice ->
-                            Timber.tag(TAG).i("${bluetoothDevice.name} : ${bluetoothDevice.address}")
                             if (bluetoothDevice.name != "null")
                                 btDevicesList.add(bluetoothDevice)
                             btDeviceAdapter?.updatesBluetoothDevicesList(btDevicesList, requireActivity())
