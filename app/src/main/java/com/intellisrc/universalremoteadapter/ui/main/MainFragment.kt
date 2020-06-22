@@ -31,6 +31,9 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
     private val btDevicesList = ArrayList<BluetoothDevice>()
     private var btDeviceAdapter: BluetoothDeviceAdapter? = null
 
+    init {
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -45,9 +48,8 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
     @SuppressLint("CheckResult")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        initAdapter()
-
         rxBluetooth = RxBluetooth(requireContext())
+        initAdapter()
 
         if (!rxBluetooth?.isBluetoothAvailable!!) {
             Timber.tag(TAG).i("Bluetooth is not available in this device. Exiting")
@@ -62,10 +64,12 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.computation())
                         .subscribe { bluetoothDevice ->
-                            btDevicesList.add(bluetoothDevice)
+                            Timber.tag(TAG).i("${bluetoothDevice.name} : ${bluetoothDevice.address}")
+                            if (bluetoothDevice.name != "null")
+                                btDevicesList.add(bluetoothDevice)
+                            btDeviceAdapter?.updatesBluetoothDevicesList(btDevicesList, requireActivity())
                         })
                 rxBluetooth?.startDiscovery()
-                btDeviceAdapter?.updatesBluetoothDevicesList(btDevicesList, requireActivity())
             }
         }
 
@@ -76,7 +80,7 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
 
     private fun initAdapter() {
         val list = ArrayList<BluetoothDevice>(1)
-        btDeviceAdapter = BluetoothDeviceAdapter(list, viewModel)
+        btDeviceAdapter = BluetoothDeviceAdapter(list, viewModel, rxBluetooth)
         rvBluetoothDevices.adapter = btDeviceAdapter
         rvBluetoothDevices.layoutManager = CustomLinearLayout(requireActivity())
         btDeviceAdapter?.notifyDataSetChanged()
