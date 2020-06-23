@@ -11,6 +11,7 @@ import androidx.annotation.NonNull
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
+import com.intellisrc.universalremoteadapter.R
 
 abstract class BaseFragment<VM> : Fragment() {
     @NonNull
@@ -33,10 +34,10 @@ abstract class BaseFragment<VM> : Fragment() {
         val tv = snackbarView.findViewById(com.google.android.material.R.id.snackbar_text) as TextView
 
         when (message) {
-            "reset-success" -> {
-                //snackbar.setText(getString(R.string.reset_success))
-                //tv.setTextColor(Color.WHITE)
-                //snackbarView.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.snackbarSuccess))
+            "bluetooth-connect-error" -> {
+                snackbar.setText(getString(R.string.error_connecting_to_device))
+                tv.setTextColor(Color.WHITE)
+                snackbarView.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.colorSnackBarError))
             }
         }
         snackbar.show()

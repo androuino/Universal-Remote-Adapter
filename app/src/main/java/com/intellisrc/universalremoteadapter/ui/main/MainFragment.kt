@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.Observer
 import com.github.ivbaranov.rxbluetooth.RxBluetooth
 import com.intellisrc.universalremoteadapter.databinding.FragmentMainBinding
 import com.intellisrc.universalremoteadapter.ui.CustomLinearLayout
@@ -48,27 +49,7 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initAdapter()
-
-        if (!viewModel?.rxBluetooth?.isBluetoothAvailable!!) {
-            Timber.tag(TAG).i("Bluetooth is not available in this device. Exiting")
-            exitProcess(0)
-        } else {
-            if (!viewModel?.rxBluetooth?.isBluetoothEnabled!!) {
-                viewModel?.rxBluetooth?.enableBluetooth(requireActivity(), 2)
-            } else {
-                // do operation here like connect or show the available Bluetooth devices
-                compositeDisposable.add(
-                    viewModel?.rxBluetooth!!.observeDevices()
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeOn(Schedulers.computation())
-                        .subscribe { bluetoothDevice ->
-                            if (bluetoothDevice.name != "null")
-                                btDevicesList.add(bluetoothDevice)
-                            btDeviceAdapter?.updatesBluetoothDevicesList(btDevicesList, requireActivity())
-                        })
-                viewModel?.rxBluetooth?.startDiscovery()
-            }
-        }
+        initObservers()
 
         if (ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION), 1)
@@ -77,10 +58,23 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
 
     private fun initAdapter() {
         val list = ArrayList<BluetoothDevice>(1)
-        btDeviceAdapter = BluetoothDeviceAdapter(list, viewModel, viewModel?.rxBluetooth)
+        btDeviceAdapter = BluetoothDeviceAdapter(list, viewModel)
         rvBluetoothDevices.adapter = btDeviceAdapter
         rvBluetoothDevices.layoutManager = CustomLinearLayout(requireActivity())
         btDeviceAdapter?.notifyDataSetChanged()
+    }
+
+    private fun initObservers() {
+        viewModel?.getBluetoothDevices?.observe(viewLifecycleOwner, Observer {
+            if (it.size > 0)
+                btDeviceAdapter?.updatesBluetoothDevicesList(it, requireActivity())
+        })
+        viewModel?.getBluetoothConnectionStatus?.observe(viewLifecycleOwner, Observer {
+            if (it)
+                viewModel?.goToRemoteControllerScreen()
+            else
+                snackbar("bluetooth-connect-error")
+        })
     }
 
     override fun onRequestPermissionsResult(
@@ -112,8 +106,8 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        compositeDisposable.dispose()
-        viewModel?.rxBluetooth?.cancelDiscovery()
+        viewModel?.onDestroy()
+        viewModel?.getBluetoothDevices?.removeObservers(viewLifecycleOwner)
     }
 
     override fun bindViewModel(viewModel: MainFragmentViewModel) {

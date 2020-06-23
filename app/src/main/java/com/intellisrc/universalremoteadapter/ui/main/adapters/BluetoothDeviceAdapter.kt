@@ -2,6 +2,7 @@ package com.intellisrc.universalremoteadapter.ui.main.adapters
 
 import android.app.Activity
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -11,9 +12,11 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.github.ivbaranov.rxbluetooth.RxBluetooth
+import com.intellisrc.universalremoteadapter.Constants
 import com.intellisrc.universalremoteadapter.R
 import com.intellisrc.universalremoteadapter.ui.main.MainFragmentViewModel
 import com.intellisrc.universalremoteadapter.utils.CustomRecyclerView
+import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
 import java.lang.IllegalArgumentException
@@ -21,8 +24,7 @@ import io.reactivex.Observable as ioObservable
 
 class BluetoothDeviceAdapter internal constructor(
     private val bluetoothDevices: MutableList<BluetoothDevice>,
-    private val viewModel: MainFragmentViewModel?,
-    private val rxBluetooth: RxBluetooth?
+    private val viewModel: MainFragmentViewModel?
 ) : CustomRecyclerView() {
     private var context: Context? = null
 
@@ -69,14 +71,12 @@ class BluetoothDeviceAdapter internal constructor(
         private val tvBtDeviceName: TextView = itemView.findViewById(R.id.tvBtDeviceName)
 
         fun bind(list: MutableList<BluetoothDevice>, position: Int) {
-            val items = list[position]
-            tvBtDeviceName.text = items.name
-            clParent.tag = items.address
+            val bluetoothDevice = list[position]
+            tvBtDeviceName.text = bluetoothDevice.name
+            clParent.tag = bluetoothDevice.address
 
             tvBtDeviceName.setOnClickListener {
-                if (rxBluetooth != null)
-                    Timber.tag(TAG).i("rxBluetooth object is not null")
-                Timber.tag(TAG).i("This is the address of the bluetooth device you have clicked: ${items.address}")
+                viewModel?.connectToBTDevice(bluetoothDevice)
             }
         }
     }
