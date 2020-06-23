@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Universal Remote Adapter</string>
     <!-- TEXTVIEW -->
-    <string name="connect_to_devices">Connect to BT devices</string>
+    <string name="connect_to_devices">Connect to Bluetooth devices</string>
     <!-- BLUETOOTH -->
     <string name="error_connecting_to_device">Error connecting to device</string>
     <!-- EXCEPTIONS -->
