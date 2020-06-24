@@ -6,4 +6,5 @@
     <color name="colorSnackBarError">#FF0000</color>
     <color name="colorWhite">#FFFFFF</color>
     <color name="colorTextViewBG">#003326</color>
+    <color name="colorConnectedBluetooth">#00FF00</color>
 </resources>

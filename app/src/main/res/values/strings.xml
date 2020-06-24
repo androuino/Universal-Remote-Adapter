@@ -10,6 +10,8 @@
     <string name="stop">STOP</string>
     <!-- BLUETOOTH -->
     <string name="error_connecting_to_device">Error connecting to device</string>
+    <!-- BOTTOM APP BAR MENU -->
+    <string name="bluetooth">Bluetooth</string>
     <!-- EXCEPTIONS -->
     <string name="illegal_argument_exception">Illegal argument exceptions in RvCurrencies</string>
 </resources>

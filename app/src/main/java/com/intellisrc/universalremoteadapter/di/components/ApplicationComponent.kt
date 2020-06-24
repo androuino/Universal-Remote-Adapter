@@ -10,7 +10,7 @@ import com.intellisrc.universalremoteadapter.di.modules.*
 import com.intellisrc.universalremoteadapter.ui.MainActivity
 import com.intellisrc.universalremoteadapter.ui.base.BaseActivity
 import com.intellisrc.universalremoteadapter.ui.base.BaseViewModel
-import com.intellisrc.universalremoteadapter.ui.main.MainFragmentViewModel
+import com.intellisrc.universalremoteadapter.ui.main.BluetoothConnectionFragmentViewModel
 import com.intellisrc.universalremoteadapter.ui.remote_controller.RemoteControllerFragmentViewModel
 import com.intellisrc.universalremoteadapter.utils.BackstackHolder
 import com.polidea.rxandroidble2.RxBleClient
@@ -24,6 +24,7 @@ import javax.inject.Singleton
     AndroidModule::class,
     ActivityModule::class,
     FragmentModule::class,
+    ViewModelModule::class,
     BackstackModule::class,
     SchedulerModule::class,
     RoomModule::class,
@@ -48,7 +49,7 @@ interface ApplicationComponent {
     fun inject(baseActivity: BaseActivity)
     // viewmodel
     fun inject(baseViewModel: BaseViewModel)
-    val mainFragmentViewModel: MainFragmentViewModel
+    val bluetoothConnectionFragmentViewModel: BluetoothConnectionFragmentViewModel
     val remoteControllerFragmentViewModel: RemoteControllerFragmentViewModel
     // repository implementations
     //fun inject(currencyLayerImplRepo: CurrencyLayerImplRepo)

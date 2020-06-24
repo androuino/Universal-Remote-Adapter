@@ -2,7 +2,6 @@ package com.intellisrc.universalremoteadapter.ui.main.adapters
 
 import android.app.Activity
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -11,28 +10,24 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.github.ivbaranov.rxbluetooth.RxBluetooth
-import com.intellisrc.universalremoteadapter.Constants
 import com.intellisrc.universalremoteadapter.R
-import com.intellisrc.universalremoteadapter.ui.main.MainFragmentViewModel
+import com.intellisrc.universalremoteadapter.ui.main.BluetoothConnectionFragmentViewModel
 import com.intellisrc.universalremoteadapter.utils.CustomRecyclerView
-import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
-import timber.log.Timber
 import java.lang.IllegalArgumentException
 import io.reactivex.Observable as ioObservable
 
 class BluetoothDeviceAdapter internal constructor(
     private val bluetoothDevices: MutableList<BluetoothDevice>,
-    private val viewModel: MainFragmentViewModel?
+    private val viewModel: BluetoothConnectionFragmentViewModel?
 ) : CustomRecyclerView() {
     private var context: Context? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         this.context = parent.context
         return when (viewType) {
-            R.layout.fragment_main_items -> {
-                val view = LayoutInflater.from(parent.context).inflate(R.layout.fragment_main_items, parent, false)
+            R.layout.fragment_bluetooth_connection_items -> {
+                val view = LayoutInflater.from(parent.context).inflate(R.layout.fragment_bluetooth_connection_items, parent, false)
                 ViewHolder(view)
             }
             else -> throw IllegalArgumentException(parent.context.getString(R.string.illegal_argument_exception))
@@ -41,14 +36,14 @@ class BluetoothDeviceAdapter internal constructor(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (getItemViewType(position)) {
-            R.layout.fragment_main_items -> (holder as ViewHolder).bind(bluetoothDevices, position)
+            R.layout.fragment_bluetooth_connection_items -> (holder as ViewHolder).bind(bluetoothDevices, position)
         }
     }
 
     override fun getItemCount(): Int = bluetoothDevices.size
 
     override fun getItemViewType(position: Int): Int {
-        return R.layout.fragment_main_items
+        return R.layout.fragment_bluetooth_connection_items
     }
 
     fun updatesBluetoothDevicesList(newList: MutableList<BluetoothDevice>, activity: Activity?) {
@@ -72,7 +67,10 @@ class BluetoothDeviceAdapter internal constructor(
 
         fun bind(list: MutableList<BluetoothDevice>, position: Int) {
             val bluetoothDevice = list[position]
-            tvBtDeviceName.text = bluetoothDevice.name
+            if (bluetoothDevice.name.isNullOrEmpty())
+                tvBtDeviceName.text = bluetoothDevice.address
+            else
+                tvBtDeviceName.text = bluetoothDevice.name
             clParent.tag = bluetoothDevice.address
 
             tvBtDeviceName.setOnClickListener {

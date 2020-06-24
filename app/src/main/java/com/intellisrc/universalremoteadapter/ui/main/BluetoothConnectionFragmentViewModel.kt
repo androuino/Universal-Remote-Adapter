@@ -26,7 +26,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-class MainFragmentViewModel @Inject constructor(private val backstack: Backstack, val rxBluetooth: RxBluetooth, val rxBleClient: RxBleClient, private val mainActivity: MainActivity) : BaseViewModel(), Observer<String> {
+class BluetoothConnectionFragmentViewModel @Inject constructor(private val backstack: Backstack, val rxBluetooth: RxBluetooth, val rxBleClient: RxBleClient, val mainActivity: MainActivity) : BaseViewModel(), Observer<String> {
     private val compositeDisposable: CompositeDisposable = CompositeDisposable()
     private val bluetoothDevicesList = MutableLiveData<ArrayList<BluetoothDevice>>()
     private val bluetoothDevices = ArrayList<BluetoothDevice>()
@@ -76,6 +76,13 @@ class MainFragmentViewModel @Inject constructor(private val backstack: Backstack
     }
 
     /**
+     * Go back to the Main screen
+     */
+    fun goBackToMainScreen() {
+        backstack.goBack()
+    }
+
+    /**
      * Go to the remote controller screen
      */
     fun goToRemoteControllerScreen() {
@@ -97,8 +104,8 @@ class MainFragmentViewModel @Inject constructor(private val backstack: Backstack
             }, {
                 Timber.tag(TAG).i("Error connecting")
                 rxBluetooth.connectAsClient(bluetoothDevice, Constants.UUID_SECURE).subscribe(
-                    {bluetoothConnectionStatus.postValue(it.isConnected)},
-                    {bluetoothConnectionStatus.postValue(false)})
+                    { bluetoothConnectionStatus.postValue(it.isConnected) },
+                    { bluetoothConnectionStatus.postValue(false) })
             })
             .let { connectionDisposable = it }
     }
@@ -170,6 +177,6 @@ class MainFragmentViewModel @Inject constructor(private val backstack: Backstack
     }
 
     companion object {
-        const val TAG = "MainFragmentViewModel"
+        const val TAG = "BtConnectionFragmentVM"
     }
 }

@@ -1,6 +1,5 @@
 package com.intellisrc.universalremoteadapter.ui.main
 
-import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -11,23 +10,21 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
-import com.github.ivbaranov.rxbluetooth.RxBluetooth
 import com.intellisrc.universalremoteadapter.R
-import com.intellisrc.universalremoteadapter.databinding.FragmentMainBinding
+import com.intellisrc.universalremoteadapter.databinding.FragmentBluetoothConnectionBinding
 import com.intellisrc.universalremoteadapter.ui.CustomLinearLayout
 import com.intellisrc.universalremoteadapter.ui.base.BaseFragment
 import com.intellisrc.universalremoteadapter.ui.main.adapters.BluetoothDeviceAdapter
 import com.intellisrc.universalremoteadapter.utils.Preconditions
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.fragment_main.*
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.fragment_bluetooth_connection.*
 import timber.log.Timber
 import kotlin.system.exitProcess
 
-class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
-    private var viewModel: MainFragmentViewModel? = null
-    private lateinit var viewBinding: FragmentMainBinding
+class BluetoothConnectionFragment : BaseFragment<BluetoothConnectionFragmentViewModel>(), LifecycleOwner {
+    private var viewModel: BluetoothConnectionFragmentViewModel? = null
+    private lateinit var viewBinding: FragmentBluetoothConnectionBinding
     private val compositeDisposable: CompositeDisposable = CompositeDisposable()
     private val btDevicesList = ArrayList<BluetoothDevice>()
     private var btDeviceAdapter: BluetoothDeviceAdapter? = null
@@ -40,7 +37,7 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        viewBinding = FragmentMainBinding.inflate(inflater, container, false)
+        viewBinding = FragmentBluetoothConnectionBinding.inflate(inflater, container, false)
         viewBinding.viewModel = viewModel
         viewBinding.lifecycleOwner = viewLifecycleOwner
         return viewBinding.root
@@ -82,11 +79,15 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
                 btDeviceAdapter?.updatesBluetoothDevicesList(it, requireActivity())
         })
         viewModel?.getBluetoothConnectionStatus?.observe(viewLifecycleOwner, Observer {
+            val menuItem = viewModel?.mainActivity?.bottomAppBar?.menu?.getItem(0) // FIXME: crashing here
             if (it) {
                 viewModel?.stopScan()
                 viewModel?.goToRemoteControllerScreen()
-            } else
+                menuItem?.icon = resources.getDrawable(R.drawable.ic_bluetooth_connected_menu)
+            } else {
                 snackbar("bluetooth-connect-error")
+                menuItem?.icon = resources.getDrawable(R.drawable.ic_bluetooth_menu)
+            }
         })
     }
 
@@ -123,7 +124,7 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
         viewModel?.getBluetoothDevices?.removeObservers(viewLifecycleOwner)
     }
 
-    override fun bindViewModel(viewModel: MainFragmentViewModel) {
+    override fun bindViewModel(viewModel: BluetoothConnectionFragmentViewModel) {
         Preconditions.checkNotNull(viewModel)
         if (this.viewModel == viewModel) {
             return

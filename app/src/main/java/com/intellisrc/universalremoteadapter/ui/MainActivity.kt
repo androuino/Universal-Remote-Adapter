@@ -1,32 +1,42 @@
 package com.intellisrc.universalremoteadapter.ui
 
 import android.os.Bundle
-import androidx.core.app.ActivityCompat
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.Observer
 import butterknife.ButterKnife
 import com.intellisrc.universalremoteadapter.R
 import com.intellisrc.universalremoteadapter.di.Injector
 import com.intellisrc.universalremoteadapter.ui.base.BaseActivity
 import com.intellisrc.universalremoteadapter.ui.base.BaseKey
-import com.intellisrc.universalremoteadapter.ui.main.MainFragmentKey
+import com.intellisrc.universalremoteadapter.ui.main.BluetoothConnectionFragmentKey
+import com.intellisrc.universalremoteadapter.ui.remote_controller.RemoteControllerFragmentKey
 import com.intellisrc.universalremoteadapter.utils.BackstackHolder
 import com.intellisrc.universalremoteadapter.utils.ServiceProvider
 import com.zhuinden.simplestack.BackstackDelegate
 import com.zhuinden.simplestack.History
 import com.zhuinden.simplestack.StateChange
 import com.zhuinden.simplestack.StateChanger
+import kotlinx.android.synthetic.main.activity_main.*
+import timber.log.Timber
 
-class MainActivity : BaseActivity(), StateChanger {
+class MainActivity : BaseActivity(), StateChanger, LifecycleOwner {
+    private lateinit var menuItem: MenuItem
 
     override fun onCreate(savedInstanceState: Bundle?) {
         backstackDelegate = BackstackDelegate()
         backstackDelegate.setScopedServices(this, ServiceProvider())
         backstackDelegate.onCreate(savedInstanceState, lastCustomNonConfigurationInstance, History.single(
-            MainFragmentKey.create))
+            RemoteControllerFragmentKey.create))
         backstackDelegate.registerForLifecycleCallbacks(this)
         val backstackHolder: BackstackHolder = Injector.get().backstackHolder
         backstackHolder.setBackstack(backstackDelegate.backstack) // <-- make Backstack globally available through Dagger
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        setSupportActionBar(bottomAppBar)
 
         ButterKnife.bind(this)
         Injector.get().inject(this)
@@ -35,7 +45,7 @@ class MainActivity : BaseActivity(), StateChanger {
         backstackDelegate.setStateChanger(this)
     }
 
-    fun setupViewsForKey(key: BaseKey<*>) {
+    private fun setupViewsForKey(key: BaseKey<*>) {
         if (key.shouldShowUp()) {
         } else {
         }
@@ -53,6 +63,25 @@ class MainActivity : BaseActivity(), StateChanger {
             //val title: String = stateChange.topNewKey<BaseKey<*>>().title(resources)!!
         }
         completionCallback.stateChangeComplete()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        val menuInflater = menuInflater
+        menuInflater.inflate(R.menu.bottom_app_bar_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.app_bar_bluetooth -> backstack.goTo(BluetoothConnectionFragmentKey.create)
+            else -> {}
+        }
+        return true
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        bluetoothConnectionFragmentViewModel.getBluetoothConnectionStatus.removeObservers(this@MainActivity)
     }
 
     override fun onBackPressed() {

@@ -7,7 +7,7 @@
         <import type="android.view.View" />
         <variable
             name="viewModel"
-            type="com.intellisrc.universalremoteadapter.ui.main.MainFragmentViewModel" />
+            type="com.intellisrc.universalremoteadapter.ui.main.BluetoothConnectionFragmentViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -27,7 +27,7 @@
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/btnScanStop"
-            tools:listitem="@layout/fragment_main_items" />
+            tools:listitem="@layout/fragment_bluetooth_connection_items" />
 
         <TextView
             android:id="@+id/tv1"
@@ -71,7 +71,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView"
-            tools:listitem="@layout/fragment_main_items" />
+            tools:listitem="@layout/fragment_bluetooth_connection_items" />
 
         <Button
             android:id="@+id/btnScanStop"
@@ -81,6 +81,7 @@
             android:text="@string/scan"
             app:layout_constraintBaseline_toBaselineOf="@+id/tv1"
             app:layout_constraintEnd_toEndOf="parent" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </layout>

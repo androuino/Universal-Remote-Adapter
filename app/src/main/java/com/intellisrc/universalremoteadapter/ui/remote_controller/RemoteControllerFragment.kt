@@ -1,9 +1,7 @@
 package com.intellisrc.universalremoteadapter.ui.remote_controller
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.lifecycle.LifecycleOwner
 import com.intellisrc.universalremoteadapter.databinding.FragmentRemoteControllerBinding
 import com.intellisrc.universalremoteadapter.ui.base.BaseFragment
