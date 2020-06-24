@@ -8,7 +8,14 @@ class Callback(
     private val oldList: MutableList<BluetoothDevice>
 ) : DiffUtil.Callback() {
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        return oldList[oldItemPosition].name == newList[newItemPosition].name
+        if (newList.size > 0 && oldList.size > 0) {
+            try {
+                return oldList[oldItemPosition].name == newList[newItemPosition].name
+            } catch (ex: Exception) {
+                return false
+            }
+        }
+        return false
     }
 
     override fun getOldListSize(): Int = oldList.size
@@ -16,8 +23,11 @@ class Callback(
     override fun getNewListSize(): Int = newList.size
 
     override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        val old = oldList[oldItemPosition]
-        val new = newList[newItemPosition]
-        return old.name == new.name
+        if (newList.size > 0 && oldList.size > 0) {
+            val old = oldList[oldItemPosition]
+            val new = newList[newItemPosition]
+            return old.name == new.name
+        }
+        return false
     }
 }

@@ -2,8 +2,6 @@ package com.intellisrc.universalremoteadapter.ui.main
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.le.ScanResult
-import android.bluetooth.le.ScanSettings
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.*
@@ -13,7 +11,10 @@ import com.intellisrc.universalremoteadapter.ui.MainActivity
 import com.intellisrc.universalremoteadapter.ui.base.BaseViewModel
 import com.intellisrc.universalremoteadapter.ui.remote_controller.RemoteControllerFragmentKey
 import com.polidea.rxandroidble2.RxBleClient
+import com.polidea.rxandroidble2.RxBleDevice
 import com.polidea.rxandroidble2.scan.ScanFilter
+import com.polidea.rxandroidble2.scan.ScanResult
+import com.polidea.rxandroidble2.scan.ScanSettings
 import com.zhuinden.simplestack.Backstack
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -21,6 +22,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -29,6 +31,12 @@ class MainFragmentViewModel @Inject constructor(private val backstack: Backstack
     private val bluetoothDevicesList = MutableLiveData<ArrayList<BluetoothDevice>>()
     private val bluetoothDevices = ArrayList<BluetoothDevice>()
     private val bluetoothConnectionStatus = MutableLiveData<Boolean>()
+    private val bondedDevicesList = MutableLiveData<ArrayList<BluetoothDevice>>()
+    private val bondedDevices = ArrayList<BluetoothDevice>()
+    private val btDevicesAddress = ArrayList<String>()
+    private var scanDisposable: Disposable? = null
+    private var connectionDisposable: Disposable? = null
+    private lateinit var bleDevice: RxBleDevice
 
     init {
         /**
@@ -38,7 +46,7 @@ class MainFragmentViewModel @Inject constructor(private val backstack: Backstack
             if (!rxBluetooth.isBluetoothEnabled) {
                 rxBluetooth.enableBluetooth(mainActivity, 2)
             } else {
-                compositeDisposable.add(
+                /*compositeDisposable.add(
                     rxBluetooth.observeDevices()
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.computation())
@@ -48,21 +56,19 @@ class MainFragmentViewModel @Inject constructor(private val backstack: Backstack
                             bluetoothDevicesList.postValue(bluetoothDevices)
                         }
                 )
-                rxBluetooth.startDiscovery()
-
-                if (rxBleClient.isScanRuntimePermissionGranted) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        scanBleDevices()
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .doFinally { dispose() }
-                            .subscribe({}, {})
-                    }
+                rxBluetooth.startDiscovery()*/
+                rxBluetooth.bondedDevices?.forEach {
+                    bondedDevices.add(it)
                 }
+                bondedDevicesList.postValue(bondedDevices)
             }
         }
     }
 
     val getBluetoothDevices = bluetoothDevicesList.switchMap {
+        liveData { emit(it) }
+    }
+    val getBondedDevices = bluetoothDevicesList.switchMap {
         liveData { emit(it) }
     }
     val getBluetoothConnectionStatus = bluetoothConnectionStatus.switchMap {
@@ -81,9 +87,20 @@ class MainFragmentViewModel @Inject constructor(private val backstack: Backstack
      */
     @SuppressLint("CheckResult")
     fun connectToBTDevice(bluetoothDevice: BluetoothDevice) {
-        rxBluetooth.connectAsClient(bluetoothDevice, Constants.UUID_SECURE).subscribe(
-            {bluetoothConnectionStatus.postValue(it.isConnected)},
-            {bluetoothConnectionStatus.postValue(false)})
+        bleDevice = rxBleClient.getBleDevice(bluetoothDevice.address)
+        bleDevice.establishConnection(true)
+            .observeOn(AndroidSchedulers.mainThread())
+            .doFinally { dispose() }
+            .subscribe({
+                Timber.tag(TAG).i("connected")
+                bluetoothConnectionStatus.postValue(true)
+            }, {
+                Timber.tag(TAG).i("Error connecting")
+                rxBluetooth.connectAsClient(bluetoothDevice, Constants.UUID_SECURE).subscribe(
+                    {bluetoothConnectionStatus.postValue(it.isConnected)},
+                    {bluetoothConnectionStatus.postValue(false)})
+            })
+            .let { connectionDisposable = it }
     }
 
     /**
@@ -93,7 +110,6 @@ class MainFragmentViewModel @Inject constructor(private val backstack: Backstack
 
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun scanBleDevices(): Observable<ScanResult> {
         val scanSettings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
@@ -108,10 +124,40 @@ class MainFragmentViewModel @Inject constructor(private val backstack: Backstack
         return rxBleClient.scanBleDevices(scanSettings, scanFilter)
     }
 
+    /**
+     * Start Ble scan
+     */
+    fun startScan() {
+        bluetoothDevices.clear()
+        if (rxBleClient.isScanRuntimePermissionGranted) {
+            scanBleDevices()
+                .observeOn(AndroidSchedulers.mainThread())
+                .doFinally { dispose() }
+                .subscribe({
+                    val present = it.bleDevice.bluetoothDevice.address in btDevicesAddress
+                    if (!present) {
+                        btDevicesAddress.add(it.bleDevice.bluetoothDevice.address)
+                        bluetoothDevices.add(it.bleDevice.bluetoothDevice)
+                        bluetoothDevicesList.postValue(bluetoothDevices)
+                    }
+                }, {
+                    // TODO: add something here
+                }).let { scanDisposable = it }
+        }
+    }
+
+    /**
+     * Stop Ble scan
+     */
+    fun stopScan() {
+        scanDisposable?.dispose()
+    }
+
     private fun dispose() {
         //scanDisposable = null
         //resultsAdapter.clearScanResults()
         //updateButtonUIState()
+        connectionDisposable = null
     }
 
     fun onDestroy() {

@@ -1,7 +1,13 @@
 <resources>
     <string name="app_name">Universal Remote Adapter</string>
     <!-- TEXTVIEW -->
+    <string name="nearby_devices">Nearby Bluetooth devices</string>
+    <string name="paired_devices">Paired Bluetooth devices</string>
     <string name="connect_to_devices">Connect to Bluetooth devices</string>
+    <string name="scanning">Scanning…</string>
+    <!-- BUTTON -->
+    <string name="scan">SCAN</string>
+    <string name="stop">STOP</string>
     <!-- BLUETOOTH -->
     <string name="error_connecting_to_device">Error connecting to device</string>
     <!-- EXCEPTIONS -->

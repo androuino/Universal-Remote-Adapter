@@ -18,32 +18,69 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvBluetoothDevices"
             android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_height="200dp"
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
-            android:layout_marginBottom="4dp"
             android:background="@color/colorPrimaryDark"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textView2"
+            app:layout_constraintTop_toBottomOf="@+id/btnScanStop"
             tools:listitem="@layout/fragment_main_items" />
 
         <TextView
-            android:id="@+id/textView2"
+            android:id="@+id/tv1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
-            android:text="@string/connect_to_devices"
+            android:text="@string/nearby_devices"
             android:textColor="@color/colorWhite"
-            android:textSize="24sp"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:textSize="20sp"
+            app:layout_constraintEnd_toStartOf="@+id/btnScanStop"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="@string/paired_devices"
+            android:textColor="@color/colorWhite"
+            android:textSize="20sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/rvBluetoothDevices" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvBondedDevices"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="@color/colorPrimaryDark"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView"
+            tools:listitem="@layout/fragment_main_items" />
+
+        <Button
+            android:id="@+id/btnScanStop"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="8dp"
+            android:text="@string/scan"
+            app:layout_constraintBaseline_toBaselineOf="@+id/tv1"
+            app:layout_constraintEnd_toEndOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </layout>

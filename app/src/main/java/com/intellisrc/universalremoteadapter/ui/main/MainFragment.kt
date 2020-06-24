@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
 import com.github.ivbaranov.rxbluetooth.RxBluetooth
+import com.intellisrc.universalremoteadapter.R
 import com.intellisrc.universalremoteadapter.databinding.FragmentMainBinding
 import com.intellisrc.universalremoteadapter.ui.CustomLinearLayout
 import com.intellisrc.universalremoteadapter.ui.base.BaseFragment
@@ -45,7 +46,6 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
         return viewBinding.root
     }
 
-    @SuppressLint("CheckResult")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initAdapter()
@@ -53,6 +53,18 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
 
         if (ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION), 1)
+        }
+
+        btnScanStop.setOnClickListener {
+            if (btnScanStop.text == resources.getString(R.string.scan)) {
+                btnScanStop.text = resources.getString(R.string.stop)
+                tv1.text = resources.getString(R.string.scanning)
+                viewModel?.startScan()
+            } else {
+                btnScanStop.text = resources.getString(R.string.scan)
+                tv1.text = resources.getString(R.string.nearby_devices)
+                viewModel?.stopScan()
+            }
         }
     }
 
@@ -70,9 +82,10 @@ class MainFragment : BaseFragment<MainFragmentViewModel>(), LifecycleOwner {
                 btDeviceAdapter?.updatesBluetoothDevicesList(it, requireActivity())
         })
         viewModel?.getBluetoothConnectionStatus?.observe(viewLifecycleOwner, Observer {
-            if (it)
+            if (it) {
+                viewModel?.stopScan()
                 viewModel?.goToRemoteControllerScreen()
-            else
+            } else
                 snackbar("bluetooth-connect-error")
         })
     }
