@@ -60,7 +60,7 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
             if (!rxBluetooth.isBluetoothEnabled) {
                 rxBluetooth.enableBluetooth(mainActivity, 2)
             } else {
-                /*compositeDisposable.add(
+                compositeDisposable.add(
                     rxBluetooth.observeDevices()
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.computation())
@@ -70,9 +70,10 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
                             bluetoothDevicesList.postValue(bluetoothDevices)
                         }
                 )
-                rxBluetooth.startDiscovery()*/
+                rxBluetooth.startDiscovery()
                 rxBluetooth.bondedDevices?.forEach {
                     bondedDevices.add(it)
+                    Timber.tag(TAG).i(it.name)
                 }
                 bondedDevicesList.postValue(bondedDevices)
             }
