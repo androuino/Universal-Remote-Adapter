@@ -1,16 +1,17 @@
-package com.intellisrc.universalremoteadapter.ui.main.adapters
+package com.intellisrc.universalremoteadapter.ui.remote_controller.adapter
 
-import android.bluetooth.BluetoothDevice
 import androidx.recyclerview.widget.DiffUtil
+import com.intellisrc.universalremoteadapter.room.entities.CodesEntity
+import kotlin.math.sign
 
 class Callback(
-    private val newList: MutableList<BluetoothDevice>,
-    private val oldList: MutableList<BluetoothDevice>
+    private val newList: MutableList<CodesEntity>,
+    private val oldList: MutableList<CodesEntity>
 ) : DiffUtil.Callback() {
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
         if (newList.size > 0 && oldList.size > 0) {
             return try {
-                oldList[oldItemPosition].name == newList[newItemPosition].name
+                oldList[oldItemPosition].code == newList[newItemPosition].code
             } catch (ex: Exception) {
                 false
             }
@@ -26,7 +27,7 @@ class Callback(
         if (newList.size > 0 && oldList.size > 0) {
             val old = oldList[oldItemPosition]
             val new = newList[newItemPosition]
-            return old.name == new.name
+            return old.code == new.code
         }
         return false
     }

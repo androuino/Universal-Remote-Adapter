@@ -3,9 +3,11 @@ package com.intellisrc.universalremoteadapter.ui.main
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothSocket
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.*
+import com.github.ivbaranov.rxbluetooth.BluetoothConnection
 import com.github.ivbaranov.rxbluetooth.RxBluetooth
 import com.github.ivbaranov.rxbluetooth.predicates.BtPredicate
 import com.intellisrc.universalremoteadapter.Constants
@@ -24,7 +26,6 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
-import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -118,6 +119,16 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
                 rxBluetooth.connectAsClient(bluetoothDevice, Constants.UUID_SECURE).subscribe(
                     {
                         bluetoothConnectionStatus.postValue(it.isConnected)
+                        val socket = bluetoothDevice.createRfcommSocketToServiceRecord(Constants.UUID_SECURE)
+                        val bluetoothConnection = BluetoothConnection(socket)
+                        bluetoothConnection.observeStringStream()
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe({
+                                Timber.tag(TAG).i("Read from RxBluetooth $it")
+                            }, {
+
+                            })
                     },
                     {
                         bluetoothConnectionStatus.postValue(false)
@@ -149,8 +160,17 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
     /**
      * Connect to bluetooth ble device as client
      */
-    fun connectToBleDevice() {
-
+    @SuppressLint("CheckResult")
+    fun read() {
+        bleDevice.establishConnection(false)
+            .flatMapSingle { rxBleConnection ->
+                rxBleConnection.readCharacteristic(Constants.UUID_SECURE)
+            }.subscribe(
+                {
+                    Timber.tag(TAG).i("Read from bleDevice $it")
+                },
+                { throwable -> }
+            )
     }
 
     private fun scanBleDevices(): Observable<ScanResult> {

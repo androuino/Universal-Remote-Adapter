@@ -6,6 +6,9 @@ import com.zhuinden.simplestack.Backstack
 import javax.inject.Inject
 
 class RemoteControllerFragmentViewModel @Inject constructor(private val backstack: Backstack) : BaseViewModel(), Observer<String> {
+
+
+
     override fun onChanged(t: String?) {
 
     }
