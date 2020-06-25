@@ -14,6 +14,7 @@ import com.intellisrc.universalremoteadapter.ui.base.BaseKey
 import com.intellisrc.universalremoteadapter.ui.main.BluetoothConnectionFragmentKey
 import com.intellisrc.universalremoteadapter.ui.remote_controller.RemoteControllerFragmentKey
 import com.intellisrc.universalremoteadapter.utils.BackstackHolder
+import com.intellisrc.universalremoteadapter.utils.RxBus
 import com.intellisrc.universalremoteadapter.utils.ServiceProvider
 import com.zhuinden.simplestack.BackstackDelegate
 import com.zhuinden.simplestack.History
@@ -68,6 +69,7 @@ class MainActivity : BaseActivity(), StateChanger, LifecycleOwner {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val menuInflater = menuInflater
         menuInflater.inflate(R.menu.bottom_app_bar_menu, menu)
+        getBluetoothConnection()
         return true
     }
 
@@ -79,9 +81,21 @@ class MainActivity : BaseActivity(), StateChanger, LifecycleOwner {
         return true
     }
 
+    private fun getBluetoothConnection() {
+        val menuItem = bottomAppBar.menu.getItem(0)
+        RxBus.subscribe((RxBus.BLUETOOTH_CONNECTION_STATE), this) {
+            it is String
+            if (it.toString() == "CONNECTED")
+                menuItem.icon = resources.getDrawable(R.drawable.ic_bluetooth_connected_menu)
+            else if (it.toString() == "DISCONNECTED")
+                menuItem.icon = resources.getDrawable(R.drawable.ic_bluetooth_menu)
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         bluetoothConnectionFragmentViewModel.getBluetoothConnectionStatus.removeObservers(this@MainActivity)
+        RxBus.unregister(this)
     }
 
     override fun onBackPressed() {

@@ -1,15 +1,19 @@
 package com.intellisrc.universalremoteadapter.ui.main
 
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.*
 import com.github.ivbaranov.rxbluetooth.RxBluetooth
+import com.github.ivbaranov.rxbluetooth.predicates.BtPredicate
 import com.intellisrc.universalremoteadapter.Constants
 import com.intellisrc.universalremoteadapter.ui.MainActivity
 import com.intellisrc.universalremoteadapter.ui.base.BaseViewModel
 import com.intellisrc.universalremoteadapter.ui.remote_controller.RemoteControllerFragmentKey
+import com.intellisrc.universalremoteadapter.utils.LocalStorage
+import com.intellisrc.universalremoteadapter.utils.RxBus
 import com.polidea.rxandroidble2.RxBleClient
 import com.polidea.rxandroidble2.RxBleDevice
 import com.polidea.rxandroidble2.scan.ScanFilter
@@ -20,13 +24,21 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
+import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-class BluetoothConnectionFragmentViewModel @Inject constructor(private val backstack: Backstack, val rxBluetooth: RxBluetooth, val rxBleClient: RxBleClient, val mainActivity: MainActivity) : BaseViewModel(), Observer<String> {
+class BluetoothConnectionFragmentViewModel @Inject constructor(
+    private val backstack: Backstack,
+    val rxBluetooth: RxBluetooth,
+    val rxBleClient: RxBleClient,
+    private val mainActivity: MainActivity,
+    private val localStorage: LocalStorage
+) : BaseViewModel(), Observer<String> {
     private val compositeDisposable: CompositeDisposable = CompositeDisposable()
     private val bluetoothDevicesList = MutableLiveData<ArrayList<BluetoothDevice>>()
     private val bluetoothDevices = ArrayList<BluetoothDevice>()
@@ -35,6 +47,7 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(private val backs
     private val bondedDevices = ArrayList<BluetoothDevice>()
     private val btDevicesAddress = ArrayList<String>()
     private var scanDisposable: Disposable? = null
+    private var stateDisposable: Disposable? = null
     private var connectionDisposable: Disposable? = null
     private lateinit var bleDevice: RxBleDevice
 
@@ -99,15 +112,38 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(private val backs
             .observeOn(AndroidSchedulers.mainThread())
             .doFinally { dispose() }
             .subscribe({
-                Timber.tag(TAG).i("connected")
                 bluetoothConnectionStatus.postValue(true)
             }, {
                 Timber.tag(TAG).i("Error connecting")
                 rxBluetooth.connectAsClient(bluetoothDevice, Constants.UUID_SECURE).subscribe(
-                    { bluetoothConnectionStatus.postValue(it.isConnected) },
-                    { bluetoothConnectionStatus.postValue(false) })
+                    {
+                        bluetoothConnectionStatus.postValue(it.isConnected)
+                    },
+                    {
+                        bluetoothConnectionStatus.postValue(false)
+                    })
+                rxBluetooth.observeConnectionState()
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.computation())
+                    .filter(BtPredicate.`in`(BluetoothAdapter.STATE_ON))
+                    .subscribe {
+                        when (it.state) {
+                            BluetoothAdapter.STATE_CONNECTING -> RxBus.publish(RxBus.BLUETOOTH_CONNECTION_STATE, "CONNECTING")
+                            BluetoothAdapter.STATE_CONNECTED -> RxBus.publish(RxBus.BLUETOOTH_CONNECTION_STATE, "CONNECTED")
+                            BluetoothAdapter.STATE_DISCONNECTING -> RxBus.publish(RxBus.BLUETOOTH_CONNECTION_STATE, "DISCONNECTING")
+                            BluetoothAdapter.STATE_DISCONNECTED -> RxBus.publish(RxBus.BLUETOOTH_CONNECTION_STATE, "DISCONNECTED")
+                        }
+                    }
             })
             .let { connectionDisposable = it }
+
+        bleDevice.observeConnectionStateChanges()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                Timber.tag(TAG).i(it.name)
+                RxBus.publish(RxBus.BLUETOOTH_CONNECTION_STATE, it.name)
+            }
+            .let { stateDisposable = it }
     }
 
     /**
@@ -135,7 +171,6 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(private val backs
      * Start Ble scan
      */
     fun startScan() {
-        bluetoothDevices.clear()
         if (rxBleClient.isScanRuntimePermissionGranted) {
             scanBleDevices()
                 .observeOn(AndroidSchedulers.mainThread())
@@ -168,6 +203,7 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(private val backs
     }
 
     fun onDestroy() {
+        stateDisposable?.dispose()
         compositeDisposable.dispose()
         rxBluetooth.cancelDiscovery()
     }

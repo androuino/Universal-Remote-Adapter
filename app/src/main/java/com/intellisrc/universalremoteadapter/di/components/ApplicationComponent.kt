@@ -13,6 +13,7 @@ import com.intellisrc.universalremoteadapter.ui.base.BaseViewModel
 import com.intellisrc.universalremoteadapter.ui.main.BluetoothConnectionFragmentViewModel
 import com.intellisrc.universalremoteadapter.ui.remote_controller.RemoteControllerFragmentViewModel
 import com.intellisrc.universalremoteadapter.utils.BackstackHolder
+import com.intellisrc.universalremoteadapter.utils.LocalStorage
 import com.polidea.rxandroidble2.RxBleClient
 import com.zhuinden.simplestack.Backstack
 import dagger.Component
@@ -40,6 +41,7 @@ interface ApplicationComponent {
     var rxBluetooth: RxBluetooth
     var rxBleClient: RxBleClient
     var mainActivity: MainActivity
+    val localStorage: LocalStorage
 
     // application
     fun inject(app: App)

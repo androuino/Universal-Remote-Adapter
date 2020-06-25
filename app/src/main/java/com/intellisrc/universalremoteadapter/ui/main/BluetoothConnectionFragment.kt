@@ -79,14 +79,11 @@ class BluetoothConnectionFragment : BaseFragment<BluetoothConnectionFragmentView
                 btDeviceAdapter?.updatesBluetoothDevicesList(it, requireActivity())
         })
         viewModel?.getBluetoothConnectionStatus?.observe(viewLifecycleOwner, Observer {
-            val menuItem = viewModel?.mainActivity?.bottomAppBar?.menu?.getItem(0) // FIXME: crashing here
             if (it) {
                 viewModel?.stopScan()
                 viewModel?.goToRemoteControllerScreen()
-                menuItem?.icon = resources.getDrawable(R.drawable.ic_bluetooth_connected_menu)
             } else {
                 snackbar("bluetooth-connect-error")
-                menuItem?.icon = resources.getDrawable(R.drawable.ic_bluetooth_menu)
             }
         })
     }
