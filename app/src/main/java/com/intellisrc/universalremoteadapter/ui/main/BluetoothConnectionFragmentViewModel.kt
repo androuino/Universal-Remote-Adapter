@@ -153,6 +153,7 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
             .subscribe {
                 Timber.tag(TAG).i(it.name)
                 RxBus.publish(RxBus.BLUETOOTH_CONNECTION_STATE, it.name)
+                read()
             }
             .let { stateDisposable = it }
     }
@@ -161,7 +162,7 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
      * Connect to bluetooth ble device as client
      */
     @SuppressLint("CheckResult")
-    fun read() {
+    private fun read() {
         bleDevice.establishConnection(false)
             .flatMapSingle { rxBleConnection ->
                 rxBleConnection.readCharacteristic(Constants.UUID_SECURE)
