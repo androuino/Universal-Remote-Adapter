@@ -71,7 +71,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView"
-            tools:listitem="@layout/fragment_bluetooth_connection_items" />
+            tools:listitem="@layout/fragment_bluetooth_bonded_devices_items" />
 
         <Button
             android:id="@+id/btnScanStop"

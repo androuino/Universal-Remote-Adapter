@@ -36,19 +36,20 @@ import javax.inject.Inject
 class BluetoothConnectionFragmentViewModel @Inject constructor(
     private val backstack: Backstack,
     val rxBluetooth: RxBluetooth,
-    val rxBleClient: RxBleClient,
+    private val rxBleClient: RxBleClient,
     private val mainActivity: MainActivity,
     private val localStorage: LocalStorage
 ) : BaseViewModel(), Observer<String> {
-    private val compositeDisposable: CompositeDisposable = CompositeDisposable()
-    private val bluetoothDevicesList = MutableLiveData<ArrayList<BluetoothDevice>>()
-    private val bluetoothDevices = ArrayList<BluetoothDevice>()
+    private val compositeDisposable       = CompositeDisposable()
+    private val bluetoothDevicesList      = MutableLiveData<ArrayList<BluetoothDevice>>()
+    private val bondedDevicesList         = MutableLiveData<ArrayList<BluetoothDevice>>()
     private val bluetoothConnectionStatus = MutableLiveData<Boolean>()
-    private val bondedDevicesList = MutableLiveData<ArrayList<BluetoothDevice>>()
-    private val bondedDevices = ArrayList<BluetoothDevice>()
-    private val btDevicesAddress = ArrayList<String>()
-    private var scanDisposable: Disposable? = null
-    private var stateDisposable: Disposable? = null
+    private val bluetoothDevices          = ArrayList<BluetoothDevice>()
+    private val bondedDevices             = ArrayList<BluetoothDevice>()
+    private val btDevicesAddress          = ArrayList<String>()
+    private val btBondedDevicesAddress    = ArrayList<String>()
+    private var scanDisposable: Disposable?       = null
+    private var stateDisposable: Disposable?      = null
     private var connectionDisposable: Disposable? = null
     private lateinit var bleDevice: RxBleDevice
 
@@ -58,24 +59,20 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
          */
         viewModelScope.launch {
             if (!rxBluetooth.isBluetoothEnabled) {
-                rxBluetooth.enableBluetooth(mainActivity, 2)
-            } else {
-                compositeDisposable.add(
-                    rxBluetooth.observeDevices()
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeOn(Schedulers.computation())
-                        .subscribe {
-                            if (it.name != "null")
-                                bluetoothDevices.add(it)
-                            bluetoothDevicesList.postValue(bluetoothDevices)
-                        }
-                )
-                rxBluetooth.startDiscovery()
-                rxBluetooth.bondedDevices?.forEach {
-                    bondedDevices.add(it)
-                    Timber.tag(TAG).i(it.name)
+                try {
+                    rxBluetooth.enableBluetooth(mainActivity, 2)
+                } catch (ex: Exception) {
+                    Timber.tag(TAG).e("Error enabling bluetooth adapter")
                 }
-                bondedDevicesList.postValue(bondedDevices)
+            } else {
+                rxBluetooth.bondedDevices?.forEach {
+                    val exist = it.address in btBondedDevicesAddress
+                    if (!exist) {
+                        btBondedDevicesAddress.add(it.address)
+                        bondedDevices.add(it)
+                        bondedDevicesList.postValue(bondedDevices)
+                    }
+                }
             }
         }
     }
@@ -83,7 +80,7 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
     val getBluetoothDevices = bluetoothDevicesList.switchMap {
         liveData { emit(it) }
     }
-    val getBondedDevices = bluetoothDevicesList.switchMap {
+    val getBondedDevices = bondedDevicesList.switchMap {
         liveData { emit(it) }
     }
     val getBluetoothConnectionStatus = bluetoothConnectionStatus.switchMap {
@@ -115,48 +112,64 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
             .doFinally { dispose() }
             .subscribe({
                 bluetoothConnectionStatus.postValue(true)
+                bleDevice.observeConnectionStateChanges()
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe {
+                        Timber.tag(TAG).i("bleDevice ${it.name}")
+                        RxBus.publish(RxBus.BLUETOOTH_CONNECTION_STATE, it.name)
+                        read()
+                    }
+                    .let { stateDisposable = it }
             }, {
                 Timber.tag(TAG).i("Error connecting")
-                rxBluetooth.connectAsClient(bluetoothDevice, Constants.UUID_SECURE).subscribe(
-                    {
-                        bluetoothConnectionStatus.postValue(it.isConnected)
-                        val socket = bluetoothDevice.createRfcommSocketToServiceRecord(Constants.UUID_SECURE)
-                        val bluetoothConnection = BluetoothConnection(socket)
-                        bluetoothConnection.observeStringStream()
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe({
-                                Timber.tag(TAG).i("Read from RxBluetooth $it")
-                            }, {
+                //stateDisposable?.dispose()
+                compositeDisposable.add(
+                    rxBluetooth.connectAsClient(bluetoothDevice, Constants.UUID_INSECURE).subscribe(
+                        { socket ->
+                            bluetoothConnectionStatus.postValue(socket.isConnected)
+                            val bluetoothConnection = BluetoothConnection(socket)
+                            bluetoothConnection.observeStringStream()
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe({ data ->
+                                    Timber.tag(TAG).i("Read from RxBluetooth $data")
+                                }, {
 
-                            })
-                    },
-                    {
-                        bluetoothConnectionStatus.postValue(false)
-                    })
-                rxBluetooth.observeConnectionState()
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeOn(Schedulers.computation())
-                    .filter(BtPredicate.`in`(BluetoothAdapter.STATE_ON))
-                    .subscribe {
-                        when (it.state) {
-                            BluetoothAdapter.STATE_CONNECTING -> RxBus.publish(RxBus.BLUETOOTH_CONNECTION_STATE, "CONNECTING")
-                            BluetoothAdapter.STATE_CONNECTED -> RxBus.publish(RxBus.BLUETOOTH_CONNECTION_STATE, "CONNECTED")
-                            BluetoothAdapter.STATE_DISCONNECTING -> RxBus.publish(RxBus.BLUETOOTH_CONNECTION_STATE, "DISCONNECTING")
-                            BluetoothAdapter.STATE_DISCONNECTED -> RxBus.publish(RxBus.BLUETOOTH_CONNECTION_STATE, "DISCONNECTED")
+                                })
+                            bluetoothConnection.closeConnection()
+                        },
+                        {
+                            bluetoothConnectionStatus.postValue(false)
+                        })
+                )
+                compositeDisposable.add(
+                    rxBluetooth.observeConnectionState()
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.computation())
+                        .filter(BtPredicate.`in`(BluetoothAdapter.STATE_ON))
+                        .subscribe {
+                            when (it.state) {
+                                BluetoothAdapter.STATE_CONNECTING -> {
+                                    Timber.tag(TAG).i("rxBluetooth CONNECTING")
+                                    RxBus.publish(RxBus.BLUETOOTH_CONNECTION_STATE, "CONNECTING")
+                                }
+                                BluetoothAdapter.STATE_CONNECTED -> {
+                                    Timber.tag(TAG).i("rxBluetooth CONNECTED")
+                                    RxBus.publish(RxBus.BLUETOOTH_CONNECTION_STATE, "CONNECTED")
+                                }
+                                BluetoothAdapter.STATE_DISCONNECTING -> {
+                                    Timber.tag(TAG).i("rxBluetooth DISCONNECTING")
+                                    RxBus.publish(RxBus.BLUETOOTH_CONNECTION_STATE, "DISCONNECTING")
+                                }
+                                BluetoothAdapter.STATE_DISCONNECTED -> {
+                                    Timber.tag(TAG).i("rxBluetooth DISCONNECTED")
+                                    RxBus.publish(RxBus.BLUETOOTH_CONNECTION_STATE, "DISCONNECTED")
+                                }
+                            }
                         }
-                    }
+                )
             })
             .let { connectionDisposable = it }
-
-        bleDevice.observeConnectionStateChanges()
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                Timber.tag(TAG).i(it.name)
-                RxBus.publish(RxBus.BLUETOOTH_CONNECTION_STATE, it.name)
-                read()
-            }
-            .let { stateDisposable = it }
     }
 
     /**
@@ -208,6 +221,20 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
                     // TODO: add something here
                 }).let { scanDisposable = it }
         }
+        compositeDisposable.add(
+            rxBluetooth.observeDevices()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.computation())
+                .subscribe {
+                    val exist = it.address in btDevicesAddress
+                    if (!exist) {
+                        btDevicesAddress.add(it.address)
+                        bluetoothDevices.add(it)
+                        bluetoothDevicesList.postValue(bluetoothDevices)
+                    }
+                }
+        )
+        rxBluetooth.startDiscovery()
     }
 
     /**
@@ -215,12 +242,11 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
      */
     fun stopScan() {
         scanDisposable?.dispose()
+        rxBluetooth.cancelDiscovery()
     }
 
     private fun dispose() {
         //scanDisposable = null
-        //resultsAdapter.clearScanResults()
-        //updateButtonUIState()
         connectionDisposable = null
     }
 

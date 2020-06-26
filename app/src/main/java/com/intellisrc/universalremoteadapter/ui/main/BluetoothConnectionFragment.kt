@@ -15,6 +15,7 @@ import com.intellisrc.universalremoteadapter.databinding.FragmentBluetoothConnec
 import com.intellisrc.universalremoteadapter.ui.CustomLinearLayout
 import com.intellisrc.universalremoteadapter.ui.base.BaseFragment
 import com.intellisrc.universalremoteadapter.ui.main.adapters.BluetoothDeviceAdapter
+import com.intellisrc.universalremoteadapter.ui.main.adapters.BtBondedDeviceAdapter
 import com.intellisrc.universalremoteadapter.utils.Preconditions
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_main.*
@@ -25,9 +26,8 @@ import kotlin.system.exitProcess
 class BluetoothConnectionFragment : BaseFragment<BluetoothConnectionFragmentViewModel>(), LifecycleOwner {
     private var viewModel: BluetoothConnectionFragmentViewModel? = null
     private lateinit var viewBinding: FragmentBluetoothConnectionBinding
-    private val compositeDisposable: CompositeDisposable = CompositeDisposable()
-    private val btDevicesList = ArrayList<BluetoothDevice>()
     private var btDeviceAdapter: BluetoothDeviceAdapter? = null
+    private var btBondedDevicesAdapter: BtBondedDeviceAdapter? = null
 
     init {
     }
@@ -71,12 +71,21 @@ class BluetoothConnectionFragment : BaseFragment<BluetoothConnectionFragmentView
         rvBluetoothDevices.adapter = btDeviceAdapter
         rvBluetoothDevices.layoutManager = CustomLinearLayout(requireActivity())
         btDeviceAdapter?.notifyDataSetChanged()
+
+        btBondedDevicesAdapter = BtBondedDeviceAdapter(list, viewModel)
+        rvBondedDevices.adapter = btBondedDevicesAdapter
+        rvBondedDevices.layoutManager = CustomLinearLayout(requireActivity())
+        btBondedDevicesAdapter?.notifyDataSetChanged()
     }
 
     private fun initObservers() {
         viewModel?.getBluetoothDevices?.observe(viewLifecycleOwner, Observer {
             if (it.size > 0)
                 btDeviceAdapter?.updatesBluetoothDevicesList(it, requireActivity())
+        })
+        viewModel?.getBondedDevices?.observe(viewLifecycleOwner, Observer {
+            if (it.size > 0)
+                btBondedDevicesAdapter?.updatesBtBondedDevicesList(it, requireActivity())
         })
         viewModel?.getBluetoothConnectionStatus?.observe(viewLifecycleOwner, Observer {
             if (it) {
@@ -119,6 +128,7 @@ class BluetoothConnectionFragment : BaseFragment<BluetoothConnectionFragmentView
         super.onDestroyView()
         viewModel?.onDestroy()
         viewModel?.getBluetoothDevices?.removeObservers(viewLifecycleOwner)
+        viewModel?.getBondedDevices?.removeObservers(viewLifecycleOwner)
     }
 
     override fun bindViewModel(viewModel: BluetoothConnectionFragmentViewModel) {
