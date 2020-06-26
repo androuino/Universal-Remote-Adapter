@@ -124,7 +124,7 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
                 Timber.tag(TAG).i("Error connecting")
                 //stateDisposable?.dispose()
                 compositeDisposable.add(
-                    rxBluetooth.connectAsClient(bluetoothDevice, Constants.UUID_INSECURE).subscribe(
+                    rxBluetooth.connectAsClient(bluetoothDevice, Constants.UUID_SECURE).subscribe(
                         { socket ->
                             bluetoothConnectionStatus.postValue(socket.isConnected)
                             val bluetoothConnection = BluetoothConnection(socket)
