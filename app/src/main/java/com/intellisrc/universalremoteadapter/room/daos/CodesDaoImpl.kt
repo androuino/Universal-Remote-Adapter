@@ -20,4 +20,8 @@ class CodesDaoImpl @Inject constructor(private val codesDao: CodesDao) : CodesDa
     override fun countAll(): Int {
         return codesDao.countAll()
     }
+
+    override fun clear() {
+        return codesDao.clear()
+    }
 }

@@ -9,7 +9,7 @@ android {
         exclude 'META-INF/NOTICE.md'
     }
     compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+    buildToolsVersion "29.0.3"
 
     defaultConfig {
         applicationId "com.intellisrc.universalremoteadapter"
@@ -85,11 +85,17 @@ dependencies {
     // Websocket
     implementation "com.squareup.okhttp3:logging-interceptor:${loggingInterceptorVersion}"
     // lifecycle
+    kapt "androidx.room:room-compiler:${androidXRoomVersion}"
     implementation "androidx.lifecycle:lifecycle-viewmodel:${lifecycleViewModel}"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:${lifecycleViewModel}"
-    // room
-    kapt "androidx.room:room-compiler:${androidXRoomVersion}"
+    implementation "androidx.lifecycle:lifecycle-extensions:${lifecycleVersion}"
+    implementation "androidx.core:core-ktx:${coreKtxVersion}"
+    implementation "androidx.recyclerview:recyclerview:${androidxVersion}"
     implementation "androidx.room:room-runtime:${androidXRoomVersion}"
+    implementation "androidx.fragment:fragment-ktx:${fragmentKTXVersion}"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:${liveDataKtxVersion}"
+    implementation "androidx.multidex:multidex:${multiDexVersion}"
+    // room
     implementation "android.arch.persistence.room:rxjava2:${roomVersion}"
     // Timber
     implementation "com.jakewharton.timber:timber:${timberVersion}"
@@ -98,16 +104,10 @@ dependencies {
     implementation "android.arch.navigation:navigation-fragment:${navigationVersion}"
     // view pager indicator
     implementation "com.github.JakeWharton:ViewPagerIndicator:${viewPagerIndicatorVersion}"
-    // androidx
-    implementation "androidx.core:core-ktx:${coreKtxVersion}"
-    implementation "androidx.recyclerview:recyclerview:${androidxVersion}"
     // tooltip
     implementation "com.github.douglasjunior:android-simple-tooltip:${tooltipVersion}"
     // simple-stack
     implementation "com.github.Zhuinden:simple-stack:${simpleStackVersion}"
-    // lifecycle
-    implementation "androidx.lifecycle:lifecycle-extensions:${lifecycleVersion}"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:${lifecycleVersion}"
     // butterKnife
     implementation "com.jakewharton:butterknife:${butterKnifeVersion}"
     kapt "com.jakewharton:butterknife-compiler:${butterKnifeVersion}" // annotationProcessor
@@ -124,12 +124,9 @@ dependencies {
     // kotlinX
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:${kotlinXVersion}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${kotlinXVersion}"
-    implementation "androidx.fragment:fragment-ktx:${fragmentKTXVersion}"
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:${liveDataKtxVersion}"
     // retrofit2
     implementation "com.squareup.retrofit2:retrofit:${retrofit2Version}"
     implementation "com.squareup.retrofit2:converter-gson:${retrofit2Version}"
-    implementation "androidx.multidex:multidex:${multiDexVersion}"
     // test
     kaptTest "com.google.auto.value:auto-value:${autoValueVersion}"
     // android annotations

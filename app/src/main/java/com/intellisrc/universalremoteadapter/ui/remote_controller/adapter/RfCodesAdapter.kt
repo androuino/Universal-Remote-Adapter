@@ -17,9 +17,9 @@ import io.reactivex.schedulers.Schedulers
 import java.lang.IllegalArgumentException
 import io.reactivex.Observable as ioObservable
 
-class CodesAdapter internal constructor(
+class RfCodesAdapter internal constructor(
     private val codeList: MutableList<CodesEntity>,
-    private val viewModel: RemoteControllerFragmentViewModel
+    private val viewModel: RemoteControllerFragmentViewModel?
 ) : CustomRecyclerView() {
     private var context: Context? = null
 
@@ -46,14 +46,14 @@ class CodesAdapter internal constructor(
         return R.layout.fragment_remote_controller_items
     }
 
-    fun updatesCodeList(newList: MutableList<CodesEntity>, activity: Activity?) {
+    fun updatesRfCodeList(newList: MutableList<CodesEntity>, activity: Activity?) {
         val callback = Callback(this.codeList, newList)
         val diff = getDiff(callback)
             .subscribeOn(Schedulers.newThread())
             .subscribe { data ->
                 this.codeList.clear()
                 this.codeList.addAll(newList)
-                activity?.runOnUiThread { data.dispatchUpdatesTo(this@CodesAdapter) }
+                activity?.runOnUiThread { data.dispatchUpdatesTo(this@RfCodesAdapter) }
             }
     }
 

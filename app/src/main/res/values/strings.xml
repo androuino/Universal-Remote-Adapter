@@ -9,6 +9,7 @@
     <!-- BUTTON -->
     <string name="scan">SCAN</string>
     <string name="stop">STOP</string>
+    <string name="clear_db">Clear Database</string>
     <!-- BLUETOOTH -->
     <string name="error_connecting_to_device">Error connecting to device</string>
     <!-- BOTTOM APP BAR MENU -->

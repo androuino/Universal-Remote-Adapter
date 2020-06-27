@@ -21,4 +21,7 @@ interface CodesDao {
 
     @Query("select count(*) from ir_codes_table")
     fun countAll(): Int
+
+    @Query("DELETE FROM ir_codes_table")
+    fun clear()
 }

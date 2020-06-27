@@ -8,4 +8,5 @@ interface CodesDaoInterface {
     fun insert(codesEntity: CodesEntity)
     fun update(codesEntity: CodesEntity)
     fun countAll(): Int
+    fun clear()
 }

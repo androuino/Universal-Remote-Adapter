@@ -11,6 +11,7 @@ import com.github.ivbaranov.rxbluetooth.BluetoothConnection
 import com.github.ivbaranov.rxbluetooth.RxBluetooth
 import com.github.ivbaranov.rxbluetooth.predicates.BtPredicate
 import com.intellisrc.universalremoteadapter.Constants
+import com.intellisrc.universalremoteadapter.room.entities.CodesEntity
 import com.intellisrc.universalremoteadapter.ui.MainActivity
 import com.intellisrc.universalremoteadapter.ui.base.BaseViewModel
 import com.intellisrc.universalremoteadapter.ui.remote_controller.RemoteControllerFragmentKey
@@ -24,6 +25,7 @@ import com.polidea.rxandroidble2.scan.ScanSettings
 import com.zhuinden.simplestack.Backstack
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.android.schedulers.AndroidSchedulers.mainThread
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
@@ -52,6 +54,7 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
     private var stateDisposable: Disposable?      = null
     private var connectionDisposable: Disposable? = null
     private lateinit var bleDevice: RxBleDevice
+    private var bluetoothConnection: BluetoothConnection? = null
 
     init {
         /**
@@ -104,11 +107,10 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
     /**
      * Connect to bluetooth classic device as client
      */
-    @SuppressLint("CheckResult")
     fun connectToBTDevice(bluetoothDevice: BluetoothDevice) {
         bleDevice = rxBleClient.getBleDevice(bluetoothDevice.address)
         bleDevice.establishConnection(true)
-            .observeOn(AndroidSchedulers.mainThread())
+            .observeOn(mainThread())
             .doFinally { dispose() }
             .subscribe({
                 bluetoothConnectionStatus.postValue(true)
@@ -127,16 +129,19 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
                     rxBluetooth.connectAsClient(bluetoothDevice, Constants.UUID_SECURE).subscribe(
                         { socket ->
                             bluetoothConnectionStatus.postValue(socket.isConnected)
-                            val bluetoothConnection = BluetoothConnection(socket)
-                            bluetoothConnection.observeStringStream()
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribeOn(Schedulers.io())
-                                .subscribe({ data ->
+                            bluetoothConnection = BluetoothConnection(socket)
+                            bluetoothConnection?.observeStringStream()
+                                ?.observeOn(mainThread())
+                                ?.subscribeOn(Schedulers.io())
+                                ?.subscribe({ data ->
                                     Timber.tag(TAG).i("Read from RxBluetooth $data")
+                                    val codesEntity = CodesEntity()
+                                    codesEntity.name = ""
+                                    codesEntity.code = data
+                                    roomDataSource.codesDao().insert(codesEntity)
                                 }, {
 
                                 })
-                            bluetoothConnection.closeConnection()
                         },
                         {
                             bluetoothConnectionStatus.postValue(false)
@@ -144,7 +149,7 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
                 )
                 compositeDisposable.add(
                     rxBluetooth.observeConnectionState()
-                        .observeOn(AndroidSchedulers.mainThread())
+                        .observeOn(mainThread())
                         .subscribeOn(Schedulers.computation())
                         .filter(BtPredicate.`in`(BluetoothAdapter.STATE_ON))
                         .subscribe {
@@ -183,7 +188,10 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
             }.subscribe(
                 {
                     Timber.tag(TAG).i("Read from bleDevice $it")
-                },
+                    val codesEntity = CodesEntity()
+                    codesEntity.name = ""
+                    codesEntity.code = it.toString()
+                    roomDataSource.codesDao().insert(codesEntity)              },
                 { throwable -> }
             )
     }
@@ -208,7 +216,7 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
     fun startScan() {
         if (rxBleClient.isScanRuntimePermissionGranted) {
             scanBleDevices()
-                .observeOn(AndroidSchedulers.mainThread())
+                .observeOn(mainThread())
                 .doFinally { dispose() }
                 .subscribe({
                     val present = it.bleDevice.bluetoothDevice.address in btDevicesAddress
@@ -223,7 +231,7 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
         }
         compositeDisposable.add(
             rxBluetooth.observeDevices()
-                .observeOn(AndroidSchedulers.mainThread())
+                .observeOn(mainThread())
                 .subscribeOn(Schedulers.computation())
                 .subscribe {
                     val exist = it.address in btDevicesAddress
@@ -254,6 +262,7 @@ class BluetoothConnectionFragmentViewModel @Inject constructor(
         stateDisposable?.dispose()
         compositeDisposable.dispose()
         rxBluetooth.cancelDiscovery()
+        bluetoothConnection?.closeConnection()
     }
 
     override fun onChanged(t: String?) {

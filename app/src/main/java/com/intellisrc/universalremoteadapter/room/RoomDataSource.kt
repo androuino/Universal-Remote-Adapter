@@ -12,7 +12,7 @@ import com.intellisrc.universalremoteadapter.room.entities.CodesEntity
     CodesEntity::class
 ], version = 1)
 abstract class RoomDataSource : RoomDatabase() {
-    abstract fun ratesDao(): CodesDao
+    abstract fun codesDao(): CodesDao
 
     companion object {
         fun buildPersistent(context: Context): RoomDataSource = Room.databaseBuilder(
